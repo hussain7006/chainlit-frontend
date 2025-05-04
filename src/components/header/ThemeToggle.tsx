@@ -20,7 +20,7 @@ export function ThemeToggle({ className }: Props) {
 
   return (
     <DropdownMenu>
-      {/* <DropdownMenuTrigger asChild>
+      <DropdownMenuTrigger asChild>
         <Button
           id="theme-toggle"
           variant="ghost"
@@ -34,7 +34,7 @@ export function ThemeToggle({ className }: Props) {
           <Moon className="absolute !size-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
           <span className="sr-only">Toggle theme</span>
         </Button>
-      </DropdownMenuTrigger> */}
+      </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => setTheme('light')}>
           <Translator path="navigation.header.theme.light" />

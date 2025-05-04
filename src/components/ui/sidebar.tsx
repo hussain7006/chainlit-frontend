@@ -1,8 +1,9 @@
+import * as React from 'react';
 import { cn } from '@/lib/utils';
 import { Slot } from '@radix-ui/react-slot';
 import { VariantProps, cva } from 'class-variance-authority';
-import { PanelLeft } from 'lucide-react';
-import * as React from 'react';
+import { PanelLeft, Sparkles, Check, X, Crown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,8 +16,18 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from '@/components/ui/tooltip';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from '@/components/ui/dialog';
 
 import { useIsMobile } from '@/hooks/use-mobile';
+import { getCookie, setCookie } from '@/utils/cookie';
 
 const SIDEBAR_COOKIE_NAME = 'sidebar:state';
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
@@ -69,7 +80,6 @@ const SidebarProvider = React.forwardRef<
     const isMobile = useIsMobile();
     const [openMobile, setOpenMobile] = React.useState(false);
 
-    // This is the internal state of the sidebar.
     // We use openProp and setOpenProp for control from outside the component.
     const [_open, _setOpen] = React.useState(defaultOpen);
     const open = openProp ?? _open;
@@ -155,6 +165,186 @@ const SidebarProvider = React.forwardRef<
 );
 SidebarProvider.displayName = 'SidebarProvider';
 
+const decodeJWT = (token: string) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error('Error decoding token:', error);
+    return null;
+  }
+};
+
+const SubscriptionModal = () => {
+  const [selectedPlan, setSelectedPlan] = React.useState('free');
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [currentPlan, setCurrentPlan] = React.useState('free');
+
+  React.useEffect(() => {
+    const token = getCookie('auth-token');
+    if (token) {
+      const decoded = decodeJWT(token);
+      
+      if (decoded && decoded.subscription) {
+        setCurrentPlan(decoded.subscription);
+        setCurrentPlan("free");
+      }
+    }
+  }, []);
+
+  const plans = [
+    {
+      id: 'free',
+      name: 'Free Plan',
+      price: '$29',
+      period: '/month',
+      features: [
+        'Access to all models',
+        'Priority support',
+        'Advanced analytics',
+        'Custom integrations'
+      ]
+    },
+    {
+      id: 'subscriber',
+      name: 'Enterprise',
+      price: 'Custom',
+      period: '',
+      features: [
+        'Everything in Pro',
+        'Dedicated support',
+        'Custom model training',
+        'API access',
+        'Team management'
+      ]
+    }
+  ];
+
+  const handleSubscription = () => {
+    console.log('Subscription logic here');
+    setIsOpen(false);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button
+          variant="default"
+          className="w-full bg-[hsl(var(--upgrade-plan-button-background))] hover:bg-[hsl(var(--upgrade-plan-button-background))]/90 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg py-6 px-4"
+        >
+          <div className="flex items-center w-full gap-3">
+            <div className="flex items-center justify-center rounded-full bg-foreground/10 p-2">
+              <Sparkles className="h-5 w-5 text-foreground" />
+            </div>
+            <div className="flex flex-col items-start">
+              <span className="font-medium text-foreground">Upgrade Plan</span>
+              <span className="text-xs text-foreground/70">More access to the models</span>
+            </div>
+          </div>
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[800px] bg-background">
+        <AnimatePresence>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold text-foreground">
+                Choose Your Plan
+              </DialogTitle>
+              <DialogDescription className="text-muted-foreground">
+                Select the plan that best fits your needs
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-6">
+              {plans.map((plan) => (
+                <motion.div
+                  key={plan.id}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={cn(
+                    'relative rounded-xl border p-8 cursor-pointer transition-all duration-200',
+                    selectedPlan === plan.id
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border hover:border-primary/50'
+                  )}
+                  onClick={() => setSelectedPlan(plan.id)}
+                >
+                  {currentPlan === plan.id && (
+                    <div className="absolute right-2 top-2">
+                      <div className="flex items-center gap-1 bg-primary text-primary-foreground px-2 py-[1px] rounded-full text-xs font-medium shadow-lg">
+                        <Crown className="h-4 w-4" />
+                        <span>Current</span>
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex flex-col gap-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold text-foreground">
+                        {plan.name}
+                      </h3>
+                      {/* {selectedPlan === plan.id && (
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary">
+                          <Check className="h-4 w-4 text-primary-foreground" />
+                        </div>
+                      )} */}
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-bold text-foreground">
+                        {plan.price}
+                      </span>
+                      <span className="text-muted-foreground">{plan.period}</span>
+                    </div>
+                    <ul className="space-y-3">
+                      {plan.features.map((feature, index) => (
+                        <li key={index} className="flex items-center gap-2">
+                          <Check className="h-4 w-4 text-primary" />
+                          <span className="text-sm text-foreground">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            <DialogFooter className="flex flex-col sm:flex-row gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setIsOpen(false)}
+                className="w-full sm:w-auto"
+              >
+                Cancel
+              </Button>
+              <Button
+                className="w-full sm:w-auto bg-primary hover:bg-primary/90"
+                onClick={() => {
+                  // Handle subscription logic here
+                  handleSubscription();
+
+                }}
+              >
+                Subscribe Now
+              </Button>
+            </DialogFooter>
+          </motion.div>
+        </AnimatePresence>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 const Sidebar = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<'div'> & {
@@ -187,6 +377,9 @@ const Sidebar = React.forwardRef<
           {...props}
         >
           {children}
+          <div className="mt-auto p-4">
+            <SubscriptionModal />
+          </div>
         </div>
       );
     }
@@ -205,7 +398,12 @@ const Sidebar = React.forwardRef<
             }
             side={side}
           >
-            <div className="flex h-full w-full flex-col">{children}</div>
+            <div className="flex h-full w-full flex-col">
+              {children}
+              <div className="mt-auto p-4">
+                <SubscriptionModal />
+              </div>
+            </div>
           </SheetContent>
         </Sheet>
       );
@@ -237,7 +435,6 @@ const Sidebar = React.forwardRef<
             side === 'left'
               ? 'left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]'
               : 'right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]',
-            // Adjust the padding for floating and inset variants.
             variant === 'floating' || variant === 'inset'
               ? 'p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)_+_theme(spacing.4)_+2px)]'
               : 'group-data-[collapsible=icon]:w-[--sidebar-width-icon] group-data-[side=left]:border-r group-data-[side=right]:border-l',
@@ -250,6 +447,9 @@ const Sidebar = React.forwardRef<
             className="flex h-full w-full flex-col bg-sidebar group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:border-sidebar-border group-data-[variant=floating]:shadow"
           >
             {children}
+            <div className="mt-auto p-4">
+              <SubscriptionModal />
+            </div>
           </div>
         </div>
       </div>
@@ -613,7 +813,7 @@ const SidebarMenuAction = React.forwardRef<
         'peer-data-[size=lg]/menu-button:top-2.5',
         'group-data-[collapsible=icon]:hidden',
         showOnHover &&
-          'group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-[state=open]:opacity-100 peer-data-[active=true]/menu-button:text-sidebar-accent-foreground md:opacity-0',
+        'group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100 data-[state=open]:opacity-100 peer-data-[active=true]/menu-button:text-sidebar-accent-foreground md:opacity-0',
         className
       )}
       {...props}

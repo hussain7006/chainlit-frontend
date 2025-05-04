@@ -5,20 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  vite@>=4.4.0 <4.4.12: '>=4.4.12'
-  vite@>=4.0.0 <=4.5.1: '>=4.5.2'
-  katex@>=0.11.0 <0.16.10: '>=0.16.10'
-  katex@>=0.15.4 <0.16.10: '>=0.16.10'
-  katex@>=0.10.0-beta <0.16.10: '>=0.16.10'
-  vite@>=4.0.0 <=4.5.2: '>=4.5.3'
+  '@cypress/request@<=2.88.12': '>=3.0.0'
   braces@<3.0.3: '>=3.0.3'
-  ws@>=8.0.0 <8.17.1: '>=8.17.1'
   micromatch@<4.0.8: '>=4.0.8'
-  vite@>=4.0.0 <4.5.4: '>=4.5.4'
-  vite@>=4.0.0 <=4.5.3: '>=4.5.4'
-  rollup@>=3.0.0 <3.29.5: '>=3.29.5'
-  rollup@>=4.0.0 <4.22.4: '>=4.22.4'
-  cross-spawn@>=7.0.0 <7.0.5: '>=7.0.5'
 
 importers:
 
@@ -114,6 +103,9 @@ importers:
       i18next:
         specifier: ^23.7.16
         version: 23.7.16
+      install:
+        specifier: ^0.13.0
+        version: 0.13.0
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -1572,7 +1564,7 @@ packages:
     resolution: {integrity: sha512-XTIWOPPcpvyKI6L1NHo0lFlCyznUEyPmPY1mc3KpPVDYulHSTvyeLNVW00QTLIAFNhR3kYnJTQHeGqU4M3n09g==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
-      rollup: '>=3.29.5'
+      rollup: ^1.20.0||^2.0.0||^3.0.0||^4.0.0
     peerDependenciesMeta:
       rollup:
         optional: true
@@ -1976,13 +1968,13 @@ packages:
   '@vitejs/plugin-react-swc@3.3.2':
     resolution: {integrity: sha512-VJFWY5sfoZerQRvJrh518h3AcQt6f/yTuWn4/TRB+dqmYU0NX1qz7qM5Wfd+gOQqUzQW4gxKqKN3KpE/P3+zrA==}
     peerDependencies:
-      vite: '>=4.5.4'
+      vite: ^4
 
   '@vitejs/plugin-react@4.2.1':
     resolution: {integrity: sha512-oojO9IDc4nCUUi8qIR11KoQm0XFFLIwsRBwHRR4d/88IWghn1y6ckz/bJ8GHDCsYEJee8mDzqtJxh15/cisJNQ==}
     engines: {node: ^14.18.0 || >=16.0.0}
     peerDependencies:
-      vite: '>=4.5.4'
+      vite: ^4.2.0 || ^5.0.0
 
   '@vitest/expect@0.34.6':
     resolution: {integrity: sha512-QUzKpUQRc1qC7qdGo7rMK3AkETI7w18gTCUrsNnyjjJKYiuUB9+TQK3QnR1unhCnWRC0AbKv2omLGQDF/mIjOw==}
@@ -3003,6 +2995,10 @@ packages:
 
   inline-style-parser@0.2.2:
     resolution: {integrity: sha512-EcKzdTHVe8wFVOGEYXiW9WmJXPjqi1T+234YpJr98RiFYKHV3cdy1+3mkTE+KHTHxFFLH51SfaGOoUdW+v7ViQ==}
+
+  install@0.13.0:
+    resolution: {integrity: sha512-zDml/jzr2PKU9I8J/xyZBQn8rPCAY//UOYNmR01XwNwyfhEWObo2SWfSl1+0tm1u6PhxLwDnfsT/6jB7OUxqFA==}
+    engines: {node: '>= 0.10'}
 
   internal-slot@1.0.7:
     resolution: {integrity: sha512-NGnrKwXzSms2qUUih/ILZ5JBqNTSa1+ZmP6flaIp6KmSElgE9qdndzS3cqjrDovwFdmwsGsLdeFgB6suw+1e9g==}
@@ -4447,12 +4443,12 @@ packages:
   vite-plugin-svgr@4.2.0:
     resolution: {integrity: sha512-SC7+FfVtNQk7So0XMjrrtLAbEC8qjFPifyD7+fs/E6aaNdVde6umlVVh0QuwDLdOMu7vp5RiGFsB70nj5yo0XA==}
     peerDependencies:
-      vite: '>=4.5.4'
+      vite: ^2.6.0 || 3 || 4 || 5
 
   vite-tsconfig-paths@4.2.0:
     resolution: {integrity: sha512-jGpus0eUy5qbbMVGiTxCL1iB9ZGN6Bd37VGLJU39kTDD6ZfULTTb1bcc5IeTWqWJKiWV5YihCaibeASPiGi8kw==}
     peerDependencies:
-      vite: '>=4.5.4'
+      vite: '*'
     peerDependenciesMeta:
       vite:
         optional: true
@@ -7455,6 +7451,8 @@ snapshots:
   inherits@2.0.4: {}
 
   inline-style-parser@0.2.2: {}
+
+  install@0.13.0: {}
 
   internal-slot@1.0.7:
     dependencies:

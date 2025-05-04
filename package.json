@@ -44,6 +44,7 @@
     "framer-motion": "^12.9.2",
     "highlight.js": "^11.9.0",
     "i18next": "^23.7.16",
+    "install": "^0.13.0",
     "lodash": "^4.17.21",
     "lucide-react": "^0.468.0",
     "plotly.js": "^2.27.0",
