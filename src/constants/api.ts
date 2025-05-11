@@ -1,4 +1,5 @@
-export const API_BASE_URL = 'http://localhost:4380';
+// export const API_BASE_URL = 'http://localhost:4380';
+export const API_BASE_URL = window.origin;
 
 export const API_ENDPOINTS = {
   AUTH: {
