@@ -20,7 +20,6 @@ code {
     --font-mono: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
       monospace;
     --background: 0 0% 100%;
-    --upgrade-plan-button-background: 0 0% 100%;
     --foreground: 0 0% 5%;
     --card: 0 0% 100%;
     --card-foreground: 0 0% 5%;
@@ -56,7 +55,6 @@ code {
   }
   .dark {
     --background: 0 0% 13%;
-    --upgrade-plan-button-background: 0 0% 13%;
     --foreground: 0 0% 93%;
     --card: 0 0% 18%;
     --card-foreground: 210 40% 98%;

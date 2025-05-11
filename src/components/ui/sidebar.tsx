@@ -237,7 +237,7 @@ const SubscriptionModal = () => {
       <DialogTrigger asChild>
         <Button
           variant="default"
-          className="w-full bg-[hsl(var(--upgrade-plan-button-background))] hover:bg-[hsl(var(--upgrade-plan-button-background))]/90 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg py-6 px-4"
+          className="w-full bg-[hsl(var(--background))] hover:bg-[hsl(var(--background))]/90 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg py-6 px-4"
         >
           <div className="flex items-center w-full gap-3">
             <div className="flex items-center justify-center rounded-full bg-foreground/10 p-2">
