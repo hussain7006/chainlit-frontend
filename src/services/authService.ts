@@ -47,8 +47,6 @@ class AuthService {
   }
 
   public async changePassword(data: ChangePasswordRequest): Promise<ChangePasswordResponse> {
-    console.log("headers:", this.getAuthHeaders());
-    console.log("cookie:", getCookie('auth-token'));
     
     try {
       const response = await fetch(`${this.baseUrl}${API_ENDPOINTS.AUTH.CHANGE_PASSWORD}`, {
@@ -60,9 +58,13 @@ class AuthService {
 
       return this.handleResponse<ChangePasswordResponse>(response);
     } catch (error) {
-      if (error instanceof Error) {
-        throw { message: error.message } as ApiError;
-      }
+      console.log("Error in changePassword:", error);
+      // Handle error appropriately
+      
+      
+      // if (error instanceof Error) {
+      //   throw { message: error.message } as ApiError;
+      // }
       throw error;
     }
   }

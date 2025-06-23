@@ -60,7 +60,9 @@ export default function ChangePassword() {
         setSuccess(false);
       }, 2000);
     } catch (err: any) {
-      setError(err.message || 'Failed to change password. Please try again.');
+      console.log("Error changing password:", err);
+      
+      setError(err.message || err.detail || 'Failed to change password. Please try again.');
     } finally {
       setLoading(false);
     }
