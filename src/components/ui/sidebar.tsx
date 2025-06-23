@@ -28,6 +28,7 @@ import {
 
 import { useIsMobile } from '@/hooks/use-mobile';
 import { getCookie, setCookie } from '@/utils/cookie';
+import { useSubscription } from '@/hooks/useSubscription';
 
 const SIDEBAR_COOKIE_NAME = 'sidebar:state';
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
@@ -165,45 +166,28 @@ const SidebarProvider = React.forwardRef<
 );
 SidebarProvider.displayName = 'SidebarProvider';
 
-const decodeJWT = (token: string) => {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    );
-    return JSON.parse(jsonPayload);
-  } catch (error) {
-    console.error('Error decoding token:', error);
-    return null;
-  }
-};
-
 const SubscriptionModal = () => {
   const [selectedPlan, setSelectedPlan] = React.useState('free');
   const [isOpen, setIsOpen] = React.useState(false);
-  const [currentPlan, setCurrentPlan] = React.useState('free');
+  const { subscriptionStatus } = useSubscription();
 
+  // Determine current plan from subscription status
+  const currentPlan = subscriptionStatus?.plan || 'free';
+
+  // Set selected plan based on current subscription
   React.useEffect(() => {
-    const token = getCookie('auth-token');
-    if (token) {
-      const decoded = decodeJWT(token);
-      
-      if (decoded && decoded.subscription) {
-        setCurrentPlan(decoded.subscription);
-        setCurrentPlan("free");
-      }
+    if (currentPlan === 'free') {
+      setSelectedPlan('subscriber'); // Enterprise is selected for free users
+    } else if (currentPlan === 'plus') {
+      setSelectedPlan('subscriber'); // Enterprise is selected for plus users
     }
-  }, []);
+  }, [currentPlan]);
 
   const plans = [
     {
       id: 'free',
       name: 'Free Plan',
-      price: '$29',
+      price: '$0',
       period: '/month',
       features: [
         'Access to all models',
@@ -227,9 +211,27 @@ const SubscriptionModal = () => {
     }
   ];
 
-  const handleSubscription = () => {
-    console.log('Subscription logic here');
-    setIsOpen(false);
+  const getCurrentPlanBadge = (planId: string) => {
+    if (currentPlan === 'free' && planId === 'free') {
+      return (
+        <div className="absolute right-2 top-2">
+          <div className="flex items-center gap-1 bg-primary text-primary-foreground px-2 py-[1px] rounded-full text-xs font-medium shadow-lg">
+            <Crown className="h-4 w-4" />
+            <span>Current</span>
+          </div>
+        </div>
+      );
+    } else if (currentPlan === 'plus' && planId === 'subscriber') {
+      return (
+        <div className="absolute right-2 top-2">
+          <div className="flex items-center gap-1 bg-primary text-primary-foreground px-2 py-[1px] rounded-full text-xs font-medium shadow-lg">
+            <Crown className="h-4 w-4" />
+            <span>Current</span>
+          </div>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -281,24 +283,12 @@ const SubscriptionModal = () => {
                   )}
                   onClick={() => setSelectedPlan(plan.id)}
                 >
-                  {currentPlan === plan.id && (
-                    <div className="absolute right-2 top-2">
-                      <div className="flex items-center gap-1 bg-primary text-primary-foreground px-2 py-[1px] rounded-full text-xs font-medium shadow-lg">
-                        <Crown className="h-4 w-4" />
-                        <span>Current</span>
-                      </div>
-                    </div>
-                  )}
+                  {getCurrentPlanBadge(plan.id)}
                   <div className="flex flex-col gap-4">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-semibold text-foreground">
                         {plan.name}
                       </h3>
-                      {/* {selectedPlan === plan.id && (
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary">
-                          <Check className="h-4 w-4 text-primary-foreground" />
-                        </div>
-                      )} */}
                     </div>
                     <div className="flex items-baseline gap-1">
                       <span className="text-3xl font-bold text-foreground">
@@ -320,23 +310,27 @@ const SubscriptionModal = () => {
             </div>
 
             <DialogFooter className="flex flex-col sm:flex-row gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setIsOpen(false)}
-                className="w-full sm:w-auto"
-              >
-                Cancel
-              </Button>
-              <Button
-                className="w-full sm:w-auto bg-primary hover:bg-primary/90"
-                onClick={() => {
-                  // Handle subscription logic here
-                  handleSubscription();
-
-                }}
-              >
-                Subscribe Now
-              </Button>
+              {currentPlan === 'free' ? (
+                <Button
+                  className="w-full sm:w-auto bg-primary hover:bg-primary/90"
+                  onClick={() => {
+                    console.log('Subscribe to Enterprise plan');
+                    window.open('https://your-subscription-url.com', '_blank');
+                    setIsOpen(false);
+                  }}
+                >
+                  Subscribe Now
+                </Button>
+              ) : (
+                <a
+                  href="https://stripe.com"
+                  // target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full sm:w-auto text-primary hover:text-primary/80 underline text-sm font-medium"
+                >
+                  Manage Subscription
+                </a>
+              )}
             </DialogFooter>
           </motion.div>
         </AnimatePresence>

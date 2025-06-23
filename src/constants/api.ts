@@ -5,6 +5,9 @@ export const API_ENDPOINTS = {
   AUTH: {
     CHANGE_PASSWORD: '/api/auth/change-password',
   },
+  SUBSCRIPTION: {
+    GET_STATUS: '/api/accounts/get_user_subscription_status',
+  },
 } as const;
 
 export const API_HEADERS = {
