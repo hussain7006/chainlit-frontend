@@ -25,10 +25,20 @@ import {
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog';
 
 import { useIsMobile } from '@/hooks/use-mobile';
 import { getCookie, setCookie } from '@/utils/cookie';
 import { useSubscription } from '@/hooks/useSubscription';
+import { subscriptionService } from '@/services/subscriptionService';
 
 const SIDEBAR_COOKIE_NAME = 'sidebar:state';
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
@@ -169,6 +179,17 @@ SidebarProvider.displayName = 'SidebarProvider';
 const SubscriptionModal = () => {
   const [selectedPlan, setSelectedPlan] = React.useState('free');
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [isManagingSubscription, setIsManagingSubscription] = React.useState(false);
+  const [errorDialog, setErrorDialog] = React.useState<{
+    open: boolean;
+    title: string;
+    message: string;
+  }>({
+    open: false,
+    title: '',
+    message: ''
+  });
   const { subscriptionStatus } = useSubscription();
 
   // Determine current plan from subscription status
@@ -182,6 +203,48 @@ const SubscriptionModal = () => {
       setSelectedPlan('subscriber'); // Enterprise is selected for plus users
     }
   }, [currentPlan]);
+
+  const showError = (title: string, message: string) => {
+    setErrorDialog({
+      open: true,
+      title,
+      message
+    });
+  };
+
+  const handleSubscribe = async () => {
+    try {
+      setIsLoading(true);
+      const checkoutUrl = await subscriptionService.createCheckoutSession();
+      window.open(checkoutUrl, '_blank');
+      setIsOpen(false);
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      showError(
+        'Subscription Error',
+        'Failed to create checkout session. Please try again.'
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    try {
+      setIsManagingSubscription(true);
+      const portalUrl = await subscriptionService.getCustomerPortalUrl();
+      window.open(portalUrl, '_blank');
+      setIsOpen(false);
+    } catch (error) {
+      console.error('Error getting customer portal URL:', error);
+      showError(
+        'Portal Access Error',
+        'Failed to access customer portal. Please try again.'
+      );
+    } finally {
+      setIsManagingSubscription(false);
+    }
+  };
 
   const plans = [
     {
@@ -235,107 +298,122 @@ const SubscriptionModal = () => {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="default"
-          className="w-full bg-[hsl(var(--background))] hover:bg-[hsl(var(--background))]/90 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg py-6 px-4"
-        >
-          <div className="flex items-center w-full gap-3">
-            <div className="flex items-center justify-center rounded-full bg-foreground/10 p-2">
-              <Sparkles className="h-5 w-5 text-foreground" />
-            </div>
-            <div className="flex flex-col items-start">
-              <span className="font-medium text-foreground">Upgrade Plan</span>
-              <span className="text-xs text-foreground/70">More access to the models</span>
-            </div>
-          </div>
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[800px] bg-background">
-        <AnimatePresence>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ duration: 0.3 }}
+    <>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <Button
+            variant="default"
+            className="w-full bg-[hsl(var(--background))] hover:bg-[hsl(var(--background))]/90 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg py-6 px-4"
           >
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-foreground">
-                Choose Your Plan
-              </DialogTitle>
-              <DialogDescription className="text-muted-foreground">
-                Select the plan that best fits your needs
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-6">
-              {plans.map((plan) => (
-                <motion.div
-                  key={plan.id}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className={cn(
-                    'relative rounded-xl border p-8 cursor-pointer transition-all duration-200',
-                    selectedPlan === plan.id
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary/50'
-                  )}
-                  onClick={() => setSelectedPlan(plan.id)}
-                >
-                  {getCurrentPlanBadge(plan.id)}
-                  <div className="flex flex-col gap-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold text-foreground">
-                        {plan.name}
-                      </h3>
-                    </div>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-bold text-foreground">
-                        {plan.price}
-                      </span>
-                      <span className="text-muted-foreground">{plan.period}</span>
-                    </div>
-                    <ul className="space-y-3">
-                      {plan.features.map((feature, index) => (
-                        <li key={index} className="flex items-center gap-2">
-                          <Check className="h-4 w-4 text-primary" />
-                          <span className="text-sm text-foreground">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </motion.div>
-              ))}
+            <div className="flex items-center w-full gap-3">
+              <div className="flex items-center justify-center rounded-full bg-foreground/10 p-2">
+                <Sparkles className="h-5 w-5 text-foreground" />
+              </div>
+              <div className="flex flex-col items-start">
+                <span className="font-medium text-foreground">Upgrade Plan</span>
+                <span className="text-xs text-foreground/70">More access to the models</span>
+              </div>
             </div>
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[800px] bg-background">
+          <AnimatePresence>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-bold text-foreground">
+                  Choose Your Plan
+                </DialogTitle>
+                <DialogDescription className="text-muted-foreground">
+                  Select the plan that best fits your needs
+                </DialogDescription>
+              </DialogHeader>
 
-            <DialogFooter className="flex flex-col sm:flex-row gap-3">
-              {currentPlan === 'free' ? (
-                <Button
-                  className="w-full sm:w-auto bg-primary hover:bg-primary/90"
-                  onClick={() => {
-                    console.log('Subscribe to Enterprise plan');
-                    window.open('https://your-subscription-url.com', '_blank');
-                    setIsOpen(false);
-                  }}
-                >
-                  Subscribe Now
-                </Button>
-              ) : (
-                <a
-                  href="https://stripe.com"
-                  // target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto text-primary hover:text-primary/80 underline text-sm font-medium"
-                >
-                  Manage Subscription
-                </a>
-              )}
-            </DialogFooter>
-          </motion.div>
-        </AnimatePresence>
-      </DialogContent>
-    </Dialog>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-6">
+                {plans.map((plan) => (
+                  <motion.div
+                    key={plan.id}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={cn(
+                      'relative rounded-xl border p-8 cursor-pointer transition-all duration-200',
+                      selectedPlan === plan.id
+                        ? 'border-primary bg-primary/5'
+                        : 'border-border hover:border-primary/50'
+                    )}
+                    onClick={() => setSelectedPlan(plan.id)}
+                  >
+                    {getCurrentPlanBadge(plan.id)}
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-foreground">
+                          {plan.name}
+                        </h3>
+                      </div>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-3xl font-bold text-foreground">
+                          {plan.price}
+                        </span>
+                        <span className="text-muted-foreground">{plan.period}</span>
+                      </div>
+                      <ul className="space-y-3">
+                        {plan.features.map((feature, index) => (
+                          <li key={index} className="flex items-center gap-2">
+                            <Check className="h-4 w-4 text-primary" />
+                            <span className="text-sm text-foreground">{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              <DialogFooter className="flex flex-col sm:flex-row gap-3">
+                {currentPlan === 'free' ? (
+                  <Button
+                    className="w-full sm:w-auto bg-primary hover:bg-primary/90"
+                    onClick={handleSubscribe}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? 'Creating Checkout...' : 'Subscribe Now'}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="w-full sm:w-auto text-primary hover:text-primary/80"
+                    onClick={handleManageSubscription}
+                    disabled={isManagingSubscription}
+                  >
+                    {isManagingSubscription ? 'Loading Portal...' : 'Manage Subscription'}
+                  </Button>
+                )}
+              </DialogFooter>
+            </motion.div>
+          </AnimatePresence>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={errorDialog.open} onOpenChange={(open) => setErrorDialog(prev => ({ ...prev, open }))}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{errorDialog.title}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {errorDialog.message}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setErrorDialog(prev => ({ ...prev, open: false }))}>
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 

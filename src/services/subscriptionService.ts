@@ -8,6 +8,14 @@ export interface SubscriptionStatus {
     cancel_at_period_end?: boolean;
 }
 
+export interface CheckoutSessionResponse {
+    checkout_url: string;
+}
+
+export interface CustomerPortalResponse {
+    portal_url: string;
+}
+
 export const subscriptionService = {
     async getUserSubscriptionStatus(): Promise<SubscriptionStatus> {
         try {
@@ -47,6 +55,58 @@ export const subscriptionService = {
                 plan: 'free',
                 status: 'active'
             };
+        }
+    },
+
+    async createCheckoutSession(): Promise<string> {
+        try {
+            const token = getCookie('auth-token');
+            console.log("token:", token);
+            console.log("URL:", `${API_BASE_URL}${API_ENDPOINTS.SUBSCRIPTION.CREATE_CHECKOUT_SESSION}`);
+            const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.SUBSCRIPTION.CREATE_CHECKOUT_SESSION}`, {
+                method: 'POST',
+                headers: {
+                    ...API_HEADERS,
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || errorData.message || 'Failed to create checkout session');
+            }
+
+            const data: CheckoutSessionResponse = await response.json();
+            return data.checkout_url;
+        } catch (error) {
+            console.error("Error in createCheckoutSession:", error);
+            throw error;
+        }
+    },
+
+    async getCustomerPortalUrl(): Promise<string> {
+        try {
+            const token = getCookie('auth-token');
+            console.log("token:", token);
+            console.log("URL:", `${API_BASE_URL}${API_ENDPOINTS.SUBSCRIPTION.GET_CUSTOMER_PORTAL_URL}`);
+            const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.SUBSCRIPTION.GET_CUSTOMER_PORTAL_URL}`, {
+                method: 'GET',
+                headers: {
+                    ...API_HEADERS,
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.detail || errorData.message || 'Failed to get customer portal URL');
+            }
+
+            const data: CustomerPortalResponse = await response.json();
+            return data.portal_url;
+        } catch (error) {
+            console.error("Error in getCustomerPortalUrl:", error);
+            throw error;
         }
     }
 }; 

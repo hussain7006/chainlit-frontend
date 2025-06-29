@@ -11,6 +11,7 @@ export const useSubscription = () => {
       setLoading(true);
       setError(null);
       const status = await subscriptionService.getUserSubscriptionStatus();
+      console.log("status:", status);
       setSubscriptionStatus(status);
     } catch (err: any) {
       console.error('Error fetching subscription status:', err);
